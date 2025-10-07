@@ -5,6 +5,7 @@ from datetime import datetime
 #basic parameters for python
 pygame.init()
 screen = pygame.display.set_mode((1280, 720))
+pygame.display.set_caption("Back on the clock")
 
 screen_size = (1280, 720)
 
@@ -43,6 +44,8 @@ def hand (time_value,quarter_start_value,quarter_end_value,c,l,n,t):
 font = pygame.font.SysFont("arial",30)
 roman_numbers = ("III","VI","IX","XII")
 roman_angle = (90)
+
+# functions that finds the 12 marks start and end position
 def startpos(angle):
     start_x_pos = center_point[0] + radius_clock * math.cos(math.radians(angle))  
     start_y_pos = center_point[1] + radius_clock * math.sin(math.radians(angle))
@@ -53,13 +56,33 @@ def endpos(angle,mark):
     end_y_pos = center_point[1] + mark * math.sin(math.radians(angle))
     end_pos = (end_x_pos,end_y_pos)
     return end_pos
+
 #rectangle function
 def rec(color,start,end,width,lenght):
     pygame.draw.rect(screen,color,(start,end,width,lenght))
+
+#panel title
 panel_labels = ["DESTINATION TIME", "PRESENT TIME", "LAST TIME DEPARTED"]
 digifont = pygame.font.Font("digital-7.ttf",60)
-# Default times
-destination_time = "21-10-1985 07:28"
+
+# Default times and button message variable
+destination_time = ""
+message = ""
+
+# Timer for message duration
+message_timer = 0
+MESSAGE_DURATION = 5000  # ms
+
+# Button helper function help from chat gpt
+def draw_button(text, pos, size, color, text_color=(255,255,255)):
+    rect = pygame.Rect(pos, size)
+    pygame.draw.rect(screen, color, rect, border_radius=5)
+    label = font.render(text, True, text_color)
+    label_rect = label.get_rect(center=rect.center)
+    screen.blit(label, label_rect)
+    return rect
+
+
 
 #main while
 while True:
@@ -110,14 +133,13 @@ while True:
     hand(hour,3,9,(50,20,20),80,12,7)
 
 
-
-
-
-
     #render bttf time panel 
     center_point1 = (center_point[0]-600,center_point[1])
     start_point = (center_point1[0]-300,center_point1[1]-200)
     rec((50,50,50),start_point[0],start_point[1],600,400)
+
+
+   #From now on, i had help from chatgpt to come up with clues, font metode, render, strftime. 
     #destination time
     rec((80,80,80),start_point[0]+5,start_point[1]+10,590,120)
     rec((0,0,0),start_point[0]+150,start_point[1]+100,300,30)
@@ -127,13 +149,11 @@ while True:
     # Draw text
     screen.blit(text_surface1, text_rect1)
     #clock present time
-    dest_time = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
-    text_surface1 = digifont.render(str(dest_time), True, (255, 0, 0))
+    text_surface1 = digifont.render(str(destination_time), True, (255, 0, 0))
     text_rect1 = text_surface1.get_rect(center=(start_point[0]+300,start_point[1]+70))
     screen.blit(text_surface1, text_rect1)
     
-
-    #present time
+    #present time 
     rec((80,80,80),start_point[0]+5,start_point[1]+135,590,120)
     rec((0,0,0),start_point[0]+175,start_point[1]+225,250,30)
     # Render the Roman numeral
@@ -141,14 +161,12 @@ while True:
     text_rect2 = text_surface2.get_rect(center=(start_point[0]+300,start_point[1]+240))
     # Draw text
     screen.blit(text_surface2, text_rect2)
-    #clock present time
+    #clock present timehelp from chat gpt
     present_time = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
     text_surface2 = digifont.render(str(present_time), True, (0, 255, 0))
     text_rect2 = text_surface2.get_rect(center=(start_point[0]+300,start_point[1]+195))
     screen.blit(text_surface2, text_rect2)
 
-    
-    
     #last time departed
     rec((80,80,80),start_point[0]+5,start_point[1]+260,590,120)
     rec((0,0,0),start_point[0]+125,start_point[1]+350,350,30)
@@ -162,10 +180,36 @@ while True:
     text_surface3= digifont.render(str(last_time), True, (255, 255, 0))
     text_rect3 = text_surface3.get_rect(center=(start_point[0]+300,start_point[1]+320))
     screen.blit(text_surface3, text_rect3)
-    
+
+
+
+
+      # Buttons
+    button1 = draw_button("Change Destination Time", (200, 600), (400, 50), (70, 70, 70))
+    button2 = draw_button("Activate time Machine", (700, 600), (400, 50), ( 70, 70, 70))
+
+#Had help to make the if section underneeth and the pygame.event
+    # Display message if exists
+    if message and pygame.time.get_ticks() - message_timer < MESSAGE_DURATION:
+        msg_surface = font.render(message, True, (0, 0, 0))
+        screen.blit(msg_surface, (50, 100))
+    elif pygame.time.get_ticks() - message_timer >= MESSAGE_DURATION:
+        message = ""
+   
     
     pygame.display.flip()
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             pygame.quit()
             exit()
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            if button1.collidepoint(event.pos):
+                # Change destination time
+                destination_time = "01-01-1955 06:00:00"
+                message = "Destination time updated!"
+                message_timer = pygame.time.get_ticks()
+
+            elif button2.collidepoint(event.pos):
+                # Time Trial message
+                message = "You are not going 88 miles an hour and you are missing 1.21 gigawatts of eletrical power."
+                message_timer = pygame.time.get_ticks()
